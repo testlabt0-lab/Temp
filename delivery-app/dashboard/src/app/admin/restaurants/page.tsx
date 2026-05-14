@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 
 export default function Restaurants() {
   const [restaurants, setRestaurants] = useState<any[]>([]);
@@ -15,7 +16,8 @@ export default function Restaurants() {
       setLoading(true);
       const { data, error } = await supabase
         .from('restaurants')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching restaurants:', error);
@@ -31,9 +33,12 @@ export default function Restaurants() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Restaurants</h1>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+        <Link
+          href="/admin/restaurants/new"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition duration-150"
+        >
           Add Restaurant
-        </button>
+        </Link>
       </div>
 
       {loading ? (
@@ -66,8 +71,8 @@ export default function Restaurants() {
                         {restaurant.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <a href="#" className="text-indigo-600 hover:text-indigo-900">Edit</a>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                      <Link href={`/admin/restaurants/${restaurant.id}/menu`} className="text-blue-600 hover:text-blue-900">Manage Menu</Link>
                     </td>
                   </tr>
                 ))
