@@ -72,6 +72,7 @@ export default function RestaurantScreen({ route, navigation }) {
       if (itemsError) throw itemsError;
 
       Alert.alert('Success', 'Order placed successfully!', [
+        { text: 'Track Order', onPress: () => { setCart([]); navigation.navigate('TrackOrder', { orderId: orderData.id }); } },
         { text: 'OK', onPress: () => { setCart([]); navigation.goBack(); } }
       ]);
 

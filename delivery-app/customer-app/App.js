@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { supabase } from './src/lib/supabase';
 import HomeScreen from './src/screens/HomeScreen';
 import RestaurantScreen from './src/screens/RestaurantScreen';
+import TrackOrderScreen from './src/screens/TrackOrderScreen';
 import LoginScreen from './src/screens/LoginScreen';
 
 const Stack = createStackNavigator();
@@ -32,7 +33,8 @@ export default function App() {
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         )}
-      </Stack.Navigator>
+      <Stack.Screen name="TrackOrder" component={TrackOrderScreen} options={{ title: 'Track Order' }} />
+          </Stack.Navigator>
     </NavigationContainer>
   );
 }

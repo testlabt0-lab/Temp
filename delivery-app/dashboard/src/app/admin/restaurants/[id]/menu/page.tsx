@@ -86,7 +86,8 @@ export default function MenuManagement() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-red-600 hover:text-red-900 ml-4">Delete</button>
+                      <button className="text-indigo-600 hover:text-indigo-900 mr-4" onClick={() => alert('Add modifiers feature coming soon!')}>Add Modifiers</button>
+                      <button className="text-red-600 hover:text-red-900">Delete</button>
                     </td>
                   </tr>
                 ))

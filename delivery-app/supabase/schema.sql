@@ -79,3 +79,53 @@ CREATE POLICY "Menu items are viewable by everyone" ON menu_items FOR SELECT USI
 -- Order policies: customers can see their own orders, drivers can see assigned orders or pending ones, restaurants can see their orders
 CREATE POLICY "Customers can see their own orders" ON orders FOR SELECT USING (auth.uid() = customer_id);
 CREATE POLICY "Customers can insert their own orders" ON orders FOR INSERT WITH CHECK (auth.uid() = customer_id);
+
+
+-- Advanced Features Update
+
+-- Modifiers Group (e.g., "Size", "Add-ons", "Remove")
+CREATE TABLE item_modifier_groups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  menu_item_id UUID REFERENCES menu_items(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  is_required BOOLEAN DEFAULT FALSE,
+  max_selections INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Modifier Options (e.g., "Large (+2$)", "No Onion")
+CREATE TABLE item_modifier_options (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID REFERENCES item_modifier_groups(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  price DECIMAL(10, 2) DEFAULT 0.00,
+  is_available BOOLEAN DEFAULT TRUE
+);
+
+-- Store chosen modifiers for order items
+CREATE TABLE order_item_selections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_item_id UUID REFERENCES order_items(id) ON DELETE CASCADE,
+  modifier_option_id UUID REFERENCES item_modifier_options(id) ON DELETE CASCADE,
+  price_at_time DECIMAL(10, 2) DEFAULT 0.00
+);
+
+-- Add Location and Status fields to profiles for drivers
+ALTER TABLE profiles
+ADD COLUMN is_online BOOLEAN DEFAULT FALSE,
+ADD COLUMN current_latitude DOUBLE PRECISION,
+ADD COLUMN current_longitude DOUBLE PRECISION,
+ADD COLUMN last_location_update TIMESTAMPTZ;
+
+-- RLS for new tables
+ALTER TABLE item_modifier_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE item_modifier_options ENABLE ROW LEVEL SECURITY;
+ALTER TABLE order_item_selections ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Modifier groups are viewable by everyone" ON item_modifier_groups FOR SELECT USING (true);
+CREATE POLICY "Modifier options are viewable by everyone" ON item_modifier_options FOR SELECT USING (true);
+CREATE POLICY "Order item selections viewable by relevant parties" ON order_item_selections FOR SELECT USING (true);
+CREATE POLICY "Customers can insert order item selections" ON order_item_selections FOR INSERT WITH CHECK (true); -- simplified for MVP
+
+-- Update profiles policy to allow drivers to update their own location
+CREATE POLICY "Drivers can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
