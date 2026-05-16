@@ -9,6 +9,7 @@ import RestaurantScreen from './src/screens/RestaurantScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import TrackOrderScreen from './src/screens/TrackOrderScreen';
 import ReviewScreen from './src/screens/ReviewScreen';
+import MyOrdersScreen from './src/screens/MyOrdersScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 
 const Stack = createStackNavigator();
@@ -70,6 +71,7 @@ export default function App() {
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           )}
         <Stack.Screen name="Review" component={ReviewScreen} options={{ title: 'Rate Order', headerLeft: ()=> null }} />
+            <Stack.Screen name="MyOrders" component={MyOrdersScreen} options={{ title: 'My Orders' }} />
             </Stack.Navigator>
       </NavigationContainer>
     </StripeProvider>

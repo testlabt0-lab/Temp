@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Button } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { supabase } from '../lib/supabase';
 
@@ -54,6 +54,12 @@ export default function HomeScreen({ navigation }) {
           <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Map View</Text>
         </TouchableOpacity>
       </View>
+      <TouchableOpacity
+        style={{ backgroundColor: '#2e7d32', padding: 10, marginHorizontal: 16, borderRadius: 8, alignItems: 'center', marginBottom: 10 }}
+        onPress={() => navigation.navigate('MyOrders')}
+      >
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>View My Orders</Text>
+      </TouchableOpacity>
 
       {restaurants.length === 0 ? (
         <View style={styles.center}>

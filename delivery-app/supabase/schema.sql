@@ -222,3 +222,44 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_profile_created
   AFTER INSERT ON public.profiles
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user_wallet();
+
+
+-- Nearest Driver Dispatch Logic Update
+
+-- A function to find the closest online driver using the Haversine formula
+-- Returns the ID of the nearest driver. In production, this would be used by an Edge Function.
+CREATE OR REPLACE FUNCTION find_nearest_driver(
+    rest_lat DOUBLE PRECISION,
+    rest_lon DOUBLE PRECISION,
+    max_radius_km INTEGER DEFAULT 10
+)
+RETURNS UUID AS $$
+DECLARE
+    nearest_driver_id UUID;
+BEGIN
+    SELECT id INTO nearest_driver_id
+    FROM profiles
+    WHERE role = 'driver'
+      AND is_online = true
+      AND current_latitude IS NOT NULL
+      AND current_longitude IS NOT NULL
+      -- Haversine formula calculation for distance in kilometers
+      AND (
+        6371 * acos(
+          cos(radians(rest_lat)) * cos(radians(current_latitude)) *
+          cos(radians(current_longitude) - radians(rest_lon)) +
+          sin(radians(rest_lat)) * sin(radians(current_latitude))
+        )
+      ) <= max_radius_km
+    ORDER BY (
+      6371 * acos(
+        cos(radians(rest_lat)) * cos(radians(current_latitude)) *
+        cos(radians(current_longitude) - radians(rest_lon)) +
+        sin(radians(rest_lat)) * sin(radians(current_latitude))
+      )
+    ) ASC
+    LIMIT 1;
+
+    RETURN nearest_driver_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
