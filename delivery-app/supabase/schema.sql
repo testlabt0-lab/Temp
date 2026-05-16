@@ -129,3 +129,18 @@ CREATE POLICY "Customers can insert order item selections" ON order_item_selecti
 
 -- Update profiles policy to allow drivers to update their own location
 CREATE POLICY "Drivers can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+
+-- Payments and Notifications Update
+
+-- Add push token to profiles
+ALTER TABLE profiles
+ADD COLUMN expo_push_token TEXT;
+
+-- Add payment details to orders
+CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
+
+ALTER TABLE orders
+ADD COLUMN payment_status payment_status NOT NULL DEFAULT 'pending',
+ADD COLUMN payment_method TEXT DEFAULT 'cash',
+ADD COLUMN stripe_payment_intent_id TEXT;

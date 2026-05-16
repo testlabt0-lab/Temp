@@ -31,7 +31,8 @@ export default function RestaurantScreen({ route, navigation }) {
     }
   }
 
-  const handleOrder = async () => {
+  const handleOrder = () => { navigation.navigate('Checkout', { cart, restaurant }); };
+  const temp = async () => {
     if (cart.length === 0) {
       Alert.alert('Cart empty', 'Please add items to your cart first.');
       return;
