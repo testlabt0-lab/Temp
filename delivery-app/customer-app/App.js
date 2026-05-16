@@ -8,6 +8,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import RestaurantScreen from './src/screens/RestaurantScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import TrackOrderScreen from './src/screens/TrackOrderScreen';
+import ReviewScreen from './src/screens/ReviewScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 
 const Stack = createStackNavigator();
@@ -68,7 +69,8 @@ export default function App() {
           ) : (
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           )}
-        </Stack.Navigator>
+        <Stack.Screen name="Review" component={ReviewScreen} options={{ title: 'Rate Order', headerLeft: ()=> null }} />
+            </Stack.Navigator>
       </NavigationContainer>
     </StripeProvider>
   );

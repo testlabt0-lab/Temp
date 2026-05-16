@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import { supabase } from './src/lib/supabase';
 import OrdersScreen from './src/screens/OrdersScreen';
 import OrderDetailScreen from './src/screens/OrderDetailScreen';
+import EarningsScreen from './src/screens/EarningsScreen';
 import LoginScreen from './src/screens/LoginScreen';
 
 const Stack = createStackNavigator();
@@ -62,7 +63,8 @@ export default function App() {
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         )}
-      </Stack.Navigator>
+      <Stack.Screen name="Earnings" component={EarningsScreen} options={{ title: 'My Wallet' }} />
+          </Stack.Navigator>
     </NavigationContainer>
   );
 }

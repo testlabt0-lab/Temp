@@ -144,3 +144,81 @@ ALTER TABLE orders
 ADD COLUMN payment_status payment_status NOT NULL DEFAULT 'pending',
 ADD COLUMN payment_method TEXT DEFAULT 'cash',
 ADD COLUMN stripe_payment_intent_id TEXT;
+
+
+-- Fintech and Reviews Update
+
+-- Wallets for users (primarily for Drivers and Customers)
+CREATE TABLE wallets (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE UNIQUE NOT NULL,
+  balance DECIMAL(10, 2) DEFAULT 0.00,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Transaction history
+CREATE TYPE transaction_type AS ENUM ('deposit', 'withdrawal', 'earning', 'commission_deduction', 'refund');
+
+CREATE TABLE transactions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  wallet_id UUID REFERENCES wallets(id) ON DELETE CASCADE,
+  order_id UUID REFERENCES orders(id) ON DELETE SET NULL, -- Nullable for manual deposits
+  type transaction_type NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ratings and Reviews
+CREATE TABLE reviews (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE UNIQUE,
+  customer_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE,
+  driver_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  restaurant_rating INTEGER CHECK (restaurant_rating >= 1 AND restaurant_rating <= 5),
+  driver_rating INTEGER CHECK (driver_rating >= 1 AND driver_rating <= 5),
+  comment TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Triggers for updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_wallets_updated_at
+BEFORE UPDATE ON wallets
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- RLS Policies
+ALTER TABLE wallets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own wallet" ON wallets FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view their own transactions" ON transactions FOR SELECT USING (
+  wallet_id IN (SELECT id FROM wallets WHERE user_id = auth.uid())
+);
+CREATE POLICY "Reviews viewable by everyone" ON reviews FOR SELECT USING (true);
+CREATE POLICY "Customers can insert reviews" ON reviews FOR INSERT WITH CHECK (auth.uid() = customer_id);
+
+-- Auto-create wallet on profile creation
+CREATE OR REPLACE FUNCTION public.handle_new_user_wallet()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.wallets (user_id)
+  VALUES (new.id);
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_profile_created
+  AFTER INSERT ON public.profiles
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user_wallet();

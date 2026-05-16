@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { supabase } from '../lib/supabase';
 
-export default function TrackOrderScreen({ route }) {
+export default function TrackOrderScreen({ route, navigation }) {
   const { orderId } = route.params;
   const [order, setOrder] = useState(null);
   const [driverLocation, setDriverLocation] = useState(null);
@@ -21,7 +21,6 @@ export default function TrackOrderScreen({ route }) {
     };
   }, [orderId]);
 
-  // Subscribe to driver location if driver is assigned
   useEffect(() => {
     let driverSubscription;
     if (order?.driver_id) {
@@ -81,6 +80,14 @@ export default function TrackOrderScreen({ route }) {
     <View style={styles.container}>
       <View style={styles.statusBox}>
         <Text style={styles.statusText}>Status: {order.status.replace('_', ' ').toUpperCase()}</Text>
+        {order.status === 'delivered' && (
+           <TouchableOpacity
+             style={styles.reviewButton}
+             onPress={() => navigation.navigate('Review', { order })}
+           >
+             <Text style={styles.reviewButtonText}>Rate Your Order</Text>
+           </TouchableOpacity>
+        )}
       </View>
       <MapView
         style={styles.map}
@@ -91,7 +98,6 @@ export default function TrackOrderScreen({ route }) {
           longitudeDelta: 0.05,
         }}
       >
-        {/* Restaurant Marker */}
         {order.restaurants?.latitude && (
           <Marker
             coordinate={{ latitude: order.restaurants.latitude, longitude: order.restaurants.longitude }}
@@ -100,7 +106,6 @@ export default function TrackOrderScreen({ route }) {
           />
         )}
 
-        {/* Driver Marker */}
         {driverLocation && (
           <Marker
             coordinate={driverLocation}
@@ -114,25 +119,11 @@ export default function TrackOrderScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  center: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statusBox: {
-    padding: 16,
-    backgroundColor: '#e8f5e9',
-    alignItems: 'center',
-  },
-  statusText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2e7d32',
-  },
-  map: {
-    flex: 1,
-  }
+  container: { flex: 1, backgroundColor: '#fff' },
+  center: { justifyContent: 'center', alignItems: 'center' },
+  statusBox: { padding: 16, backgroundColor: '#e8f5e9', alignItems: 'center' },
+  statusText: { fontSize: 18, fontWeight: 'bold', color: '#2e7d32', marginBottom: 10 },
+  reviewButton: { backgroundColor: '#2e7d32', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 20 },
+  reviewButtonText: { color: 'white', fontWeight: 'bold' },
+  map: { flex: 1 }
 });
