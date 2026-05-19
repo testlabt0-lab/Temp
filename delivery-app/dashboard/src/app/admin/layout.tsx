@@ -17,6 +17,7 @@ export default function AdminLayout({
           <Link href="/admin/restaurants" className="block py-2 px-4 hover:bg-gray-800 rounded">Restaurants</Link>
           <Link href="/admin/orders" className="block py-2 px-4 hover:bg-gray-800 rounded">Orders</Link>
           <Link href="/admin/users" className="block py-2 px-4 hover:bg-gray-800 rounded">Users</Link>
+          <Link href="/admin/promos" className="block py-2 px-4 hover:bg-gray-800 rounded">Promos</Link>
         </nav>
       </aside>
 

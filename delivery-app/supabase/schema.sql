@@ -263,3 +263,42 @@ BEGIN
     RETURN nearest_driver_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- Promo Codes and Discounts Update
+
+CREATE TABLE promo_codes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  code TEXT UNIQUE NOT NULL,
+  discount_percentage DECIMAL(5, 2) CHECK (discount_percentage > 0 AND discount_percentage <= 100),
+  max_discount_amount DECIMAL(10, 2), -- Cap on the discount (e.g., Max $15 off)
+  min_order_amount DECIMAL(10, 2) DEFAULT 0.00,
+  valid_from TIMESTAMPTZ DEFAULT NOW(),
+  valid_until TIMESTAMPTZ NOT NULL,
+  usage_limit INTEGER, -- How many times total this code can be used
+  times_used INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Keep track of which users used which codes to prevent double usage
+CREATE TABLE user_promo_usages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  promo_code_id UUID REFERENCES promo_codes(id) ON DELETE CASCADE,
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+  used_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, promo_code_id) -- A user can only use a specific promo code once
+);
+
+ALTER TABLE orders
+ADD COLUMN promo_code_id UUID REFERENCES promo_codes(id) ON DELETE SET NULL,
+ADD COLUMN discount_amount DECIMAL(10, 2) DEFAULT 0.00;
+
+ALTER TABLE promo_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_promo_usages ENABLE ROW LEVEL SECURITY;
+
+-- Allow public to read active promo codes to validate them
+CREATE POLICY "Active promo codes viewable by everyone" ON promo_codes FOR SELECT USING (is_active = true);
+CREATE POLICY "Users can see their own usages" ON user_promo_usages FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own usages" ON user_promo_usages FOR INSERT WITH CHECK (auth.uid() = user_id);
